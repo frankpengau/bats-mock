@@ -142,5 +142,5 @@ else
   } > "${!_STUB_RUN}"
 
   debug "result ${!_STUB_RESULT}"
-  exit "${!_STUB_RESULT}"
+  exit "$status"
 fi
