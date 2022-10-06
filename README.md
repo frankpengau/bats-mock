@@ -83,13 +83,13 @@ If you want to verify that your stub was passed the correct data in STDIN, you c
 
 ```bash
 @test "send_message" {
+  stub curl \
+    "${_CURL_ARGS} : cat > ${_TMP_DIR}/actual-input ; cat ${_RESOURCES_DIR}/mock-output"
 
-	stub curl \
-		"${_CURL_ARGS} : cat > ${_TMP_DIR}/actual-input ; cat ${_RESOURCES_DIR}/mock-output"
-
-	run send_message
-	assert_success
-	diff "${_TMP_DIR}/actual-input" "${_RESOURCES_DIR}/expected-input"
+  run send_message
+  assert_success
+  diff "${_TMP_DIR}/actual-input" "${_RESOURCES_DIR}/expected-input"
+  unstub curl
 }
 ```
 
@@ -99,15 +99,17 @@ If you want to verify that your stub was called with the correct arguments, you 
 
 ```bash
 @test "send_message" {
+  stub curl \
+    "-X \* \* : echo \$3 > ${_TMP_DIR}/curl-url; echo \$2 > ${_TMP_DIR}/curl-method"
 
-	stub curl \
-		"-X \* \* : echo \$3 > ${_TMP_DIR}/curl-url; echo \$2 > ${_TMP_DIR}/curl-method"
-
-	run send_message
-	assert_success
-	diff "${_TMP_DIR}/curl-url" "${_RESOURCES_DIR}/expected-url"
+  run send_message
+  
+  assert_success
+  diff "${_TMP_DIR}/curl-url" "${_RESOURCES_DIR}/expected-url"
   called_method="$(cat ${_TMP_DIR}/curl-method)"
   [ "$called_method" == "POST" ]
+
+  unstub curl
 }
 ```
 
