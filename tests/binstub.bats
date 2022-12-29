@@ -36,18 +36,19 @@ function teardown() {
 }
 
 
-@test "Invoke a stub to often" {
+@test "Invoke a stub more than expected" {
   stub mycommand "llamas : echo running llamas"
 
   run bash -c "mycommand llamas"
   [ "$status" -eq 0 ]
   [ "$output" == "running llamas" ]
 
-  # To often -> return failure
+  # More executions -> return failure
   run bash -c "mycommand llamas"
   [ "$status" -eq 1 ]
   [ "$output" == "" ]
 
+  # and they also make unstubbing fail to fail the whole command
   run unstub mycommand
   [ "$status" -eq 1 ]
   [[ "$output" == "" ]]
@@ -84,11 +85,14 @@ function teardown() {
 @test "Succeed for empty stubbed command" {
   stub mycommand
   # mycommand not called
-  unstub mycommand
+  run unstub mycommand
+  [ "$status" -eq 0 ]
+  [ "$output" == "" ]
 }
 
 @test "Fail if empty stubbed command called" {
   stub mycommand
+  # force an execution outside of run and never fail
   mycommand --help || true # Don't fail here
   run unstub mycommand
   [ "$status" -eq 1 ]
@@ -164,25 +168,48 @@ function teardown() {
   run mycommand foo
   [ "$status" -eq 0 ]
   [ "$output" == "OK" ]
+  unstub mycommand
+
   # Also works in any position
-  stub mycommand 'first second \* : echo OK'
+  stub mycommand 'first second * : echo OK'
   run mycommand first second foo
   [ "$status" -eq 0 ]
   [ "$output" == "OK" ]
-  stub mycommand 'first \* last : echo OK'
+  unstub mycommand
+
+  stub mycommand 'first * last : echo OK'
   run mycommand first foo last
   [ "$status" -eq 0 ]
   [ "$output" == "OK" ]
-  stub mycommand '\* second last : echo OK'
+  unstub mycommand
+
+  stub mycommand '* second last : echo OK'
   run mycommand foo second last
   [ "$status" -eq 0 ]
   [ "$output" == "OK" ]
+  unstub mycommand
+
   # Also matches literal *
-  stub mycommand '\* : echo OK'
+  stub mycommand '* : echo OK'
   run mycommand '*'
   [ "$status" -eq 0 ]
   [ "$output" == "OK" ]
   unstub mycommand
+
+  # in double quotes it does not needs to be escaped
+  stub mycommand "* : echo NOT ESCAPED"
+  run mycommand 'whatever'
+  [ "$status" -eq 0 ]
+  [ "$output" == "NOT ESCAPED" ]
+  unstub mycommand
+
+  # ... but it can and still works
+  stub mycommand "\* : echo NOT ESCAPED"
+  run mycommand 'whatever'
+  [ "$status" -eq 0 ]
+  [ "$output" == "NOT ESCAPED" ]
+  unstub mycommand
+
 }
 
 @test "Match parameters with whitespace" {
@@ -191,6 +218,7 @@ function teardown() {
   run mycommand "first arg" "second arg"
   [ "$status" -eq 0 ]
   [ "$output" == "OK" ]
+  unstub mycommand
   # Double quotes
   stub mycommand '"first arg" "second arg" : echo OK'
   run mycommand "first arg" "second arg"
@@ -258,11 +286,13 @@ function teardown() {
   run mycommand
   [ "$status" -eq 0 ]
   [ "$output" == "OK" ]
+  unstub mycommand
   # 1 arg
   stub mycommand "echo OK"
   run mycommand foo
   [ "$status" -eq 0 ]
   [ "$output" == "OK" ]
+  unstub mycommand
   # 2 args
   stub mycommand "echo OK"
   run mycommand foo bar
@@ -285,6 +315,7 @@ function teardown() {
   run mycommand
   [ "$status" -eq 0 ]
   [ "$output" == 'OK' ]
+  unstub mycommand
   stub mycommand ": echo OK"
   run mycommand foo
   [ "$status" -eq 1 ]
