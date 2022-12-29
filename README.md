@@ -113,30 +113,49 @@ If you want to verify that your stub was called with the correct arguments, you 
 }
 ```
 
-### Accepting any arguments
+### Accepting any (or no) arguments
 
-Sometimes the argument is to complicated to determine in advance so you just want to ensure that an argument is given.
-Or you want to assert that the argument matches a given pattern, e.g. starts with a prefix.   
-When even that is undesired then you can even accept any call with any number of arguments.
+Sometimes the argument is too complicated to determine in advance or it would make the stubbing really long and convoluted. In those cases you can use `\*` to ensure that an argument is given.
 
 ```bash
 @test "send_message" {
 
 	stub grep \
-    '* /home* : printf "%s" "$1" > ${_RESOURCES_DIR}/mock-output' \
-    'exit 0'
+    '\* \* : echo OK' \
+    '\* \* : echo OK'
+
+  # matches because there are exactly 2 arguments
+  grep "$complicated_pattern" /home/user/file
+  # this does not because there are 3 arguments :(
+  grep -ri "$complicated_pattern" /home/user/file
+
+}
+```
+
+If you do not care about the amount of arguments, not having any colons whatsoever means accepting any amount of arguments:
+
+```bash
+@test "send_message" {
+
+	stub grep \
+    'exit 0' \
+    'exit 1' \
+    'exit 2'
   
-  # Matches first and hence prints the patter to mock-output
+  # Will match the first stub line and exit with code 0
   grep "$complicated_pattern" /home/user/file
 
-  # Matches second and simply returns success
+  # Matches the second one and exits witch code 1
   grep -E -i "$some_pattern" "$some_file"
 
-  # If your command contains ' : ' just start with double-colon
-  stub cat '::echo "Hello : World"'
-  # Prints "Hello : World"
-  cat foo bar
+  # No arguments also match, the third one exits with code 2 :)
+  grep
+```
 
+If you want to ensure no arguments whatsoever, you add a single colon at the very beginning:
+
+```bash
+@test "send_message" {
   # Note that a single colon at the start is interpreted as "no arguments"
   stub cat ': echo "OK"'
   ! cat foo # `cat` stub fails as an argument was passed
@@ -145,7 +164,11 @@ When even that is undesired then you can even accept any call with any number of
   stub cat':echo "OK"'
   # Will accept any arguments and execute `:echo "OK"` -> Fails
   !cat foo # command `:echo` not found
-}
+
+  # If your command contains ' : ' just start with double-colon
+  stub cat '::echo "Hello : World"'
+  # Prints "Hello : World"
+  cat foo bar
 ```
 
 ### Incremental Stubbing
