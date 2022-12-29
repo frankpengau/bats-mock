@@ -201,6 +201,7 @@ function teardown() {
 
 @test "Match parameter with embedded command line" {
   stub mycommand "-c 'echo \"Hello \$USER\"' : echo OK"
+  # shellcheck disable=SC2016  # this is on purpose
   run mycommand -c 'echo "Hello $USER"'
   [ "$status" -eq 0 ]
   [ "$output" == "OK" ]
