@@ -1,16 +1,21 @@
 BATS_MOCK_TMPDIR="${BATS_TMPDIR}"
 BATS_MOCK_BINDIR="${BATS_MOCK_TMPDIR}/bin"
 
-export BATS_MOCK_REAL_mkdir=$(which mkdir)
-export BATS_MOCK_REAL_ln=$(which ln)
-export BATS_MOCK_REAL_touch=$(which touch)
-export BATS_MOCK_REAL_rm=$(which rm)
+BATS_MOCK_REAL_mkdir=$(which mkdir)
+export BATS_MOCK_REAL_mkdir
+BATS_MOCK_REAL_ln=$(which ln)
+export BATS_MOCK_REAL_ln
+BATS_MOCK_REAL_touch=$(which touch)
+export BATS_MOCK_REAL_touch
+BATS_MOCK_REAL_rm=$(which rm)
+export BATS_MOCK_REAL_rm
 
 PATH="$BATS_MOCK_BINDIR:$PATH"
 
 stub() {
   local program="$1"
-  local prefix="$(echo "$program" | tr a-z- A-Z_)"
+  local prefix
+  prefix="$(echo "$program" | tr a-z- A-Z_)"
   shift
 
   export "${prefix}_STUB_PLAN"="${BATS_MOCK_TMPDIR}/${program}-stub-plan"
@@ -31,8 +36,9 @@ unstub() {
     shift
   fi
   local program="$1"
-  local prefix="$(echo "$program" | tr a-z- A-Z_)"
   local path="${BATS_MOCK_BINDIR}/${program}"
+  local prefix
+  prefix="$(echo "$program" | tr a-z- A-Z_)"
 
   export "${prefix}_STUB_END"=1
 
