@@ -38,9 +38,7 @@ match_found=0
 while IFS= read -r line; do
   index=$((index + 1))
 
-  # if [ -n "${!_STUB_DEBUG}" ]; then
-  #   echo "bats-mock: [idx $index, want ${!_STUB_INDEX}] $line" >&${!_STUB_DEBUG}
-  # fi
+  # debug "bats-mock: [idx $index, want ${!_STUB_INDEX}] $line"
 
   if [ -z "${!_STUB_END}" ] && [ $index -eq "${!_STUB_INDEX}" ]; then
     # We found the plan line we're interested in.
