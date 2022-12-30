@@ -16,6 +16,9 @@ function touch {
 }
 
 @test "Stubbing still works when some util binaries are mock functions" {
+  run rm ../README.md
+  [ "$status" -eq 1 ]
+
   stub mycommand " : echo OK"
   run mycommand
   [ "$status" -eq 0 ]
