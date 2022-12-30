@@ -15,8 +15,16 @@ PATH="$BATS_MOCK_BINDIR:$PATH"
 stub() {
   local program="$1"
   local prefix
-  prefix="$(echo "$program" | tr a-z- A-Z_)"
+  # shellcheck disable=SC2018,SC2019  # anything not A-Z0-9 will be _
+  # the "\n" is necessary to avoid adding a trailing _ to the name
+  prefix="$(echo "$program" | tr a-z A-Z | tr -C "A-Z0-9\n" '_')"
   shift
+
+
+  if [[ "$prefix" =~ ^[^A-Z_]+(.*)$ ]]; then
+    # remove leading non A-Z_ characters to make a valid variable name
+    prefix="${BASH_REMATCH[1]}"
+  fi
 
   export "${prefix}_STUB_PLAN"="${BATS_MOCK_TMPDIR}/${program}-stub-plan"
   export "${prefix}_STUB_RUN"="${BATS_MOCK_TMPDIR}/${program}-stub-run"
@@ -38,7 +46,14 @@ unstub() {
   local program="$1"
   local path="${BATS_MOCK_BINDIR}/${program}"
   local prefix
-  prefix="$(echo "$program" | tr a-z- A-Z_)"
+  # shellcheck disable=SC2018,SC2019  # anything not A-Z0-9 will be _
+  # the "\n" is necessary to avoid adding a trailing _ to the name
+  prefix="$(echo "${program}" | tr a-z A-Z | tr -C "A-Z0-9\n" '_')"
+
+  if [[ "$prefix" =~ ^[^A-Z_]+(.*)$ ]]; then
+    # remove leading non A-Z_ characters to make a valid variable name
+    prefix="${BASH_REMATCH[1]}"
+  fi
 
   export "${prefix}_STUB_END"=1
 

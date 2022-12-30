@@ -4,7 +4,14 @@ set -e
 # Assume failure of stubbed command
 status=1
 program="${0##*/}"
-PROGRAM="$(echo "$program" | tr a-z- A-Z_)"
+# shellcheck disable=SC2018,SC2019  # anything not A-Z0-9 will be _
+# the "\n" is necessary to avoid adding a trailing _ to the name
+PROGRAM="$(echo "${program}" | tr a-z A-Z | tr -C "A-Z0-9\n" '_')"
+
+if [[ "$PROGRAM" =~ ^[^A-Z_]+(.*)$ ]]; then
+  # remove leading non A-Z_ characters to make a valid variable name
+  PROGRAM="${BASH_REMATCH[1]}"
+fi
 
 _STUB_PLAN="${PROGRAM}_STUB_PLAN"
 _STUB_RUN="${PROGRAM}_STUB_RUN"
