@@ -113,6 +113,88 @@ If you want to verify that your stub was called with the correct arguments, you 
 }
 ```
 
+### Accepting any (or no) arguments
+
+Sometimes the argument is too complicated to determine in advance or it would make the stubbing really long and convoluted. In those cases you can use `\*` to ensure that an argument is given.
+
+```bash
+@test "send_message" {
+
+	stub grep \
+    '\* \* : echo OK' \
+    '\* \* : echo OK'
+
+  # matches because there are exactly 2 arguments
+  grep "$complicated_pattern" /home/user/file
+  # this does not because there are 3 arguments :(
+  grep -ri "$complicated_pattern" /home/user/file
+
+}
+```
+
+If you do not care about the amount of arguments, not having any colons whatsoever means accepting any amount of arguments:
+
+```bash
+@test "send_message" {
+
+	stub grep \
+    'exit 0' \
+    'exit 1' \
+    'exit 2'
+  
+  # Will match the first stub line and exit with code 0
+  grep "$complicated_pattern" /home/user/file
+
+  # Matches the second one and exits witch code 1
+  grep -E -i "$some_pattern" "$some_file"
+
+  # No arguments also match, the third one exits with code 2 :)
+  grep
+```
+
+If you want to ensure no arguments whatsoever, you add a single colon at the very beginning:
+
+```bash
+@test "send_message" {
+  # Note that a single colon at the start is interpreted as "no arguments"
+  stub cat ': echo "OK"'
+  ! cat foo # `cat` stub fails as an argument was passed
+
+  # But don't forget the space!
+  stub cat':echo "OK"'
+  # Will accept any arguments and execute `:echo "OK"` -> Fails
+  !cat foo # command `:echo` not found
+
+  # If your command contains ' : ' just start with double-colon
+  stub cat '::echo "Hello : World"'
+  # Prints "Hello : World"
+  cat foo bar
+```
+
+### Incremental Stubbing
+
+In some case it might be preferable to define the invocation plan incrementally to mirror the actual behavior of the program under test.
+This can be done by invocing `stub` multiple times with the same command.   
+In case you want to to start with a new plan call `unstub` first.
+
+```bash
+# Function to test
+function install() {
+  apt-get update
+  pt-add-repository -y myrepo
+  apt-get update
+}
+
+@test "test installation" {
+  stub apt-get "update : "
+  stub apt-add-repository "-y myrepo : "
+  stub apt-get "update : " # Appends to existing plan
+  run install
+  unstub apt-get # Verifies plan and removes all remaining files
+  stub apt-get "upgrade" # Start with a new plan
+}
+```
+
 ## Troubleshooting
 
 It can be difficult to figure out why your mock has failed. You can enable debugging setting an environment variable called after the command being stubbed (all in underscore-separeted, uppercase) with the `STUB_DEBUG` suffix. The value of the variable needs to be a device or file descriptor where to redirect the debugging output. Recommended value is `3`, which should make the output compatible with tap's expectation but you can also use `/dev/tty`.
