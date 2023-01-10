@@ -1,0 +1,15 @@
+steps:
+  - label: ":shell: Shellcheck"
+    plugins:
+      - shellcheck#v1.3.0:
+          files:
+            - binstub
+            - stub.bash
+            - tests/*
+  - label: ":hammer: Tests"
+    command: tests
+    plugins:
+      - docker#v5.3.0:
+          image: bats/bats:1.8.2-no-faccessat2
+          shell: false
+          workdir: /mnt
