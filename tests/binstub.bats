@@ -323,3 +323,15 @@ function teardown() {
   run unstub mycommand
   [ "$status" -eq 1 ]
 }
+
+@test "Call stub with more arguments than expected" {
+  stub mycommand "llamas : echo running llamas"
+
+  run mycommand llamas extra
+
+  [ "$status" -eq 1 ]
+  [ "$output" == '' ]
+
+  run unstub mycommand
+  [ "$status" -eq 1 ]
+}
