@@ -95,7 +95,7 @@ while IFS= read -r line; do
           # will break existing * matching and generate a shellcheck warning
           # $pattern ) ;;
           "$pattern" ) ;;
-          * ) debug "$(printf "match failed at idx %d, expected '%q', got '%q'" $i "$pattern" "$argument")"
+          * ) debug "$(printf "match failed at idx %d, expected '%q', got '%q'" "$i" "$pattern" "$argument")"
               match_found=2
               break ;;
         esac
