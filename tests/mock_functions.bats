@@ -4,15 +4,19 @@ load '../stub'
 
 setup() {
   function rm {
+    # shellcheck disable=SC2317  # Don't warn about unreachable commands in this file
     return 10
   }
   function mkdir {
+    # shellcheck disable=SC2317  # Don't warn about unreachable commands in this file
     return 20
   }
   function ln {
+    # shellcheck disable=SC2317  # Don't warn about unreachable commands in this file
     return 30
   }
   function touch {
+    # shellcheck disable=SC2317  # Don't warn about unreachable commands in this file
     return 40
   }
 }

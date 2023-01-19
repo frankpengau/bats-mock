@@ -237,7 +237,6 @@ function teardown() {
 }
 
 @test "Allow partial matches" {
-  skip
   stub mycommand '/foo/bar/* : echo OK'
   run mycommand "/foo/bar/myfile"
   [ "$status" -eq 0 ]
